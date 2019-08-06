@@ -125,10 +125,7 @@ void Light::setNotificationLED() {
     bool bln = false;
 #endif
 
-    if (mBatteryState.color & COLOR_MASK) {
-        adjusted_brightness = LED_BRIGHTNESS_BATTERY;
-        state = mBatteryState;
-    } else if (mNotificationState.color & COLOR_MASK) {
+    if (mNotificationState.color & COLOR_MASK) {
         adjusted_brightness = LED_BRIGHTNESS_NOTIFICATION;
         state = mNotificationState;
 #ifdef LED_BLN_NODE
@@ -144,21 +141,44 @@ void Light::setNotificationLED() {
         if (state.flashMode == Flash::NONE) {
             state.color = 0;
         }
+
+// Battery should have the lowest priority, more important to see notis/attentions
+    } else if (mBatteryState.color & COLOR_MASK) {
+        adjusted_brightness = LED_BRIGHTNESS_BATTERY;
+        state = mBatteryState;
+
     } else {
         set(LED_BLINK_NODE, "0x00000000 0 0");
         return;
     }
 
-    if (state.flashMode == Flash::NONE) {
-        state.flashOnMs = 0;
-        state.flashOffMs = 0;
-    }
-
     state.color = calibrateColor(state.color & COLOR_MASK, adjusted_brightness);
     std::stringstream ss;
-    ss << std::hex << "0x" << std::setfill('0') << std::setw(8) << state.color << std::dec
-       << " " << state.flashOnMs << " " << state.flashOffMs;
-    set(LED_BLINK_NODE, ss.str());
+
+    if (state.flashMode == Flash::NONE) {
+ // Set colors directly to avoid half a second blink gap at the beginning
+       int red, green, blue;
+
+       uint32_t colorRGB = state.color;
+       red = (colorRGB >> 16) & 0xff;
+       green = (colorRGB >> 8) & 0xff;
+       blue = colorRGB & 0xff;
+
+       ss << red << std::endl;
+       set(LED_R_NODE, ss.str());
+       ss.str("");
+       ss << green << std::endl;
+       set(LED_G_NODE, ss.str());
+       ss.str("");
+       ss << blue << std::endl;
+       set(LED_B_NODE, ss.str());
+    }
+    else
+    {
+        ss << std::hex << "0x" << std::setfill('0') << std::setw(8) << state.color << std::dec
+           << " " << state.flashOnMs << " " << state.flashOffMs;
+           set(LED_BLINK_NODE, ss.str());
+    }
 
 #ifdef LED_BLN_NODE
     if (bln) {
