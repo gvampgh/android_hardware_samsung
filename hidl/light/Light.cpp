@@ -141,12 +141,10 @@ void Light::setNotificationLED() {
         if (state.flashMode == Flash::NONE) {
             state.color = 0;
         }
-
 // Battery should have the lowest priority, more important to see notis/attentions
     } else if (mBatteryState.color & COLOR_MASK) {
         adjusted_brightness = LED_BRIGHTNESS_BATTERY;
         state = mBatteryState;
-
     } else {
         set(LED_BLINK_NODE, "0x00000000 0 0");
         return;
