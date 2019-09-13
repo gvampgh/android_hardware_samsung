@@ -145,6 +145,7 @@ void Light::setNotificationLED() {
     } else if (mBatteryState.color & COLOR_MASK) {
         adjusted_brightness = LED_BRIGHTNESS_BATTERY;
         state = mBatteryState;
+
     } else {
         set(LED_BLINK_NODE, "0x00000000 0 0");
         return;
